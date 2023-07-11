@@ -1,0 +1,192 @@
+# создание БД Друзья человека и подключение к ней
+CREATE DATABASE Human_friends;
+USE Human_friends;
+#Создать таблицы с иерархией из диаграммы в БД
+CREATE TABLE animal_classes
+(
+	Id INT AUTO_INCREMENT PRIMARY KEY, 
+	Class_name VARCHAR(20) NOT NULL
+);
+
+INSERT INTO animal_classes (Class_name)
+VALUES ('PackAnimals'),('Pets');
+
+CREATE TABLE pack_animals
+(
+	Id INT AUTO_INCREMENT PRIMARY KEY,
+    Type VARCHAR (20),
+    Class_id INT,
+    FOREIGN KEY (Class_id) REFERENCES animal_classes (Id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+INSERT INTO pack_animals (Type, Class_id)
+VALUES ('Horses', 1),
+('Donkeys', 1),  
+('Camels', 1); 
+
+CREATE TABLE pets
+(
+	Id INT AUTO_INCREMENT PRIMARY KEY,
+    Type VARCHAR (20),
+    Class_id INT,
+    FOREIGN KEY (Class_id) REFERENCES animal_classes (Id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+INSERT INTO pets (Type, Class_id)
+VALUES ('Cats', 2),
+('Dogs', 2),  
+('Hamsters', 2);
+
+# создаю и заполняю низкоуровнеые таблицы
+CREATE TABLE cats 
+(       
+    Id INT AUTO_INCREMENT PRIMARY KEY, 
+    Name VARCHAR(20), 
+    Birthday DATE,
+    Instructions VARCHAR(50),
+    Type_id int,
+    Foreign KEY (Type_id) REFERENCES pets (Id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+INSERT INTO cats (Name, Birthday, Instructions, Type_id)
+VALUES
+('Барсик', '2011-01-01', 'брысь', 1),
+('Кися', '2016-01-01', 'фу', 1),  
+('Виски', '2015-01-01', 'кискис', 1),  
+('Лилу', '2017-01-01', 'еда', 1);
+
+CREATE TABLE dogs
+(       
+    Id INT AUTO_INCREMENT PRIMARY KEY, 
+    Name VARCHAR(20), 
+    Birthday DATE,
+    Instructions VARCHAR(50),
+    Type_id int,
+    Foreign KEY (Type_id) REFERENCES pets (Id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+INSERT INTO dogs (Name, Birthday, Instructions, Type_id)
+VALUES
+('Джек', '2020-01-01', 'рядом', 2),
+('Тузик', '2015-01-01', 'кноге', 2),
+('Чапа', '2014-01-01', 'сидеть', 2),  
+('Бакс', '2016-01-01', 'лежать', 2);
+
+CREATE TABLE hamsters
+(       
+    Id INT AUTO_INCREMENT PRIMARY KEY, 
+    Name VARCHAR(20), 
+    Birthday DATE,
+    Instructions VARCHAR(50),
+    Type_id int,
+    Foreign KEY (Type_id) REFERENCES pets (Id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+INSERT INTO hamsters (Name, Birthday, Instructions, Type_id)
+VALUES 
+('Леня', '2021-01-01', 'есть', 3),
+('Шар', '2022-01-01', 'пить', 3),
+('Хомяк', '2019-01-01', 'фу', 3),  
+('Комок', '2020-01-01', 'бежать', 3);
+
+CREATE TABLE horses
+(       
+    Id INT AUTO_INCREMENT PRIMARY KEY, 
+    Name VARCHAR(20), 
+    Birthday DATE,
+    Instructions VARCHAR(50),
+    Type_id int,
+    Foreign KEY (Type_id) REFERENCES pack_animals (Id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+INSERT INTO horses (Name, Birthday, Instructions, Type_id)
+VALUES 
+('Дон', '2015-01-01', 'галоп', 1),
+('Гоп', '2014-01-01', 'но', 1),
+('Прыг', '2019-01-01', 'фу', 1),  
+('Скок', '2021-01-01', 'пррр', 1);
+
+CREATE TABLE donkeys
+(       
+    Id INT AUTO_INCREMENT PRIMARY KEY, 
+    Name VARCHAR(20), 
+    Birthday DATE,
+    Instructions VARCHAR(50),
+    Type_id int,
+    Foreign KEY (Type_id) REFERENCES pack_animals (Id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+INSERT INTO donkeys (Name, Birthday, Instructions, Type_id)
+VALUES
+('Вася', '2010-01-01', 'дай', 2),
+('Петя', '2011-01-01', 'сено', 2),
+('Серый', '2018-01-01', 'иди', 2),  
+('Валера', '2022-01-01', 'стой', 2);
+
+CREATE TABLE camels
+(       
+    Id INT AUTO_INCREMENT PRIMARY KEY, 
+    Name VARCHAR(20), 
+    Birthday DATE,
+    Instructions VARCHAR(50),
+    Type_id int,
+    Foreign KEY (Type_id) REFERENCES pack_animals (Id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+INSERT INTO camels (Name, Birthday, Instructions, Type_id)
+VALUES 
+('Пу', '2009-01-01', 'вода', 3),
+('Ка', '2017-01-01', 'сядь', 3),
+('Нем', '2010-01-01', 'иди', 3),  
+('Шой', '2023-01-01', 'неси', 3);
+
+#  Удаляю из таблицы верблюдов. 
+
+SET SQL_SAFE_UPDATES = 0;
+DELETE FROM camels;
+
+# Объедияю таблицы лошади и ослы в одну таблицу.
+
+SELECT * FROM horses
+UNION
+SELECT * FROM donkeys;
+
+# Создаю новую таблицу Молодые животные в которую попадут все животные старше 1 года, но младше 3 лет и в отдельном столбце с точностью до месяца подсчитать возраст животных в новой таблице.
+
+CREATE TABLE all_animals AS
+SELECT * FROM horses
+UNION
+SELECT * FROM donkeys
+UNION
+SELECT * FROM dogs
+UNION
+SELECT * FROM cats
+UNION
+SELECT * FROM hamsters;
+
+
+CREATE TABLE young_animals
+SELECT Id, Name, Birthday, Instructions, Type_id, TIMESTAMPDIFF(MONTH, Birthday, CURDATE()) AS Age_in_months
+FROM all_animals
+WHERE Birthday BETWEEN ADDDATE(curdate(), INTERVAL -3 YEAR) AND ADDDATE(CURDATE(), INTERVAL -1 YEAR);
+
+# Объединяю все таблицы в одну, при этом сохраняя поля, указывающие на прошлую принадлежность к старым таблицам
+
+SELECT h.Name, h.Birthday, h.Instructions, pa.Type, ya.Age_in_months 
+FROM horses h
+LEFT JOIN young_animals ya ON ya.Name = h.Name
+LEFT JOIN pack_animals pa ON pa.Id = h.Type_id
+UNION 
+SELECT d.Name, d.Birthday, d.Instructions, pa.Type, ya.Age_in_months 
+FROM donkeys d 
+LEFT JOIN young_animals ya ON ya.Name = d.Name
+LEFT JOIN pack_animals pa ON pa.Id = d.Type_id
+UNION
+SELECT c.Name, c.Birthday, c.Instructions, ha.Type, ya.Age_in_months 
+FROM cats c
+LEFT JOIN young_animals ya ON ya.Name = c.Name
+LEFT JOIN pets ha ON ha.Id = c.Type_id
+UNION
+SELECT d.Name, d.Birthday, d.Instructions, ha.Type, ya.Age_in_months 
+FROM dogs d
+LEFT JOIN young_animals ya ON ya.Name = d.Name
+LEFT JOIN pets ha ON ha.Id = d.Type_id
+UNION
+SELECT hm.Name, hm.Birthday, hm.Instructions, ha.Type, ya.Age_in_months 
+FROM hamsters hm
+LEFT JOIN young_animals ya ON ya.Name = hm.Name
+LEFT JOIN pets ha ON ha.Id = hm.Type_id;

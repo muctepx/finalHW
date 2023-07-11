@@ -1,0 +1,29 @@
+ 1384  cat > pets
+ 1385  ls
+ 1386  cat > pack_animals
+ 1387  ls
+ 1388  cat > pets
+ 1389  nano pets
+ 1390  sudo rm pets
+ 1391  sudo rm pack_animals
+ 1392  cat > pets.txt
+ 1393  nano pets.txt 
+ 1394  cat > pack_animals.txt
+ 1395  cat pets.txt pack_animals.txt > animals.txt
+ 1397  nano animals.txt 
+ 1399  mv animals.txt humansfriends.txt
+ 1400  ls
+ 1401  mkdir finalHW
+ 1402  mv humansfriends.txt finalHW/
+ 1403  cd finalHW/
+ 1404  ls
+ 1405  sudo apt update
+ 1406  sudo apt install mysql-server
+ 1407  cd ..
+ 1422  pwd
+ 1423  sudo dpkg -i /home/dan/virtualbox-7.0_7.0.6-155176~Ubuntu~jammy_amd64.deb
+ 1424  dpkg --get-selections
+ 1425  apt list –installed
+ 1428  sudo dpkg -r virtualbox-7.0
+ 1429  history 50
+
